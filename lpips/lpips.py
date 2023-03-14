@@ -12,11 +12,19 @@ import torch.nn
 import lpips
 
 def spatial_average(in_tens, keepdim=True):
-    return in_tens.mean([2,3],keepdim=keepdim)
+    if in_tens.ndim == 4:
+        return in_tens.mean([2,3], keepdim=keepdim)
+    elif in_tens.ndim == 5:
+        return in_tens.mean([2,3,4], keepdim=keepdim)
 
 def upsample(in_tens, out_HW=(64,64)): # assumes scale factor is same for H and W
-    in_H, in_W = in_tens.shape[2], in_tens.shape[3]
-    return nn.Upsample(size=out_HW, mode='bilinear', align_corners=False)(in_tens)
+    if in_tens.ndim == 4:
+        in_H, in_W = in_tens.shape[2], in_tens.shape[3]
+        return nn.Upsample(size=out_HW, mode='bilinear', align_corners=False)(in_tens)
+    if in_tens.ndim == 5:
+        out_HW = tuple(list(out_HW).append(out_HW[-1]))
+        in_H, in_W = in_tens.shape[2], in_tens.shape[3]
+        return nn.Upsample(size=out_HW, mode='bilinear', align_corners=False)(in_tens)
 
 # Learned perceptual metric
 class LPIPS(nn.Module):
